@@ -1,0 +1,353 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Inter:wght@400;500;600&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "JetBrains Mono", monospace;
+
+  --color-mission-bg: #050505;
+  --color-mission-ink: #0a0a0a;
+  --color-mission-accent: #00FF41; /* CRT Green */
+  --color-mission-accent-dim: rgba(0, 255, 65, 0.2);
+  --color-mission-border: rgba(0, 255, 65, 0.2);
+  --color-mission-text-muted: #666;
+}
+
+@layer base {
+  body {
+    @apply bg-mission-bg text-[#00FF41] font-sans antialiased text-[13px];
+    background-image: radial-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-attachment: fixed;
+  }
+
+  h1, h2 {
+    @apply font-sans font-bold tracking-tight text-mission-accent;
+  }
+
+  h3, h4 {
+    @apply font-sans font-semibold tracking-wide text-mission-accent;
+  }
+
+  /* Monospace utility — ONLY for system labels and metadata */
+  .mono {
+    @apply font-mono uppercase tracking-[0.3em] text-[10px];
+  }
+
+  /* Readable text — for descriptions, paragraphs, bios */
+  .readable-text {
+    @apply font-sans text-sm leading-relaxed tracking-normal;
+    color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+@layer components {
+  .mission-border {
+    @apply border border-mission-border relative p-4;
+  }
+  
+  .mission-border::before {
+    content: '';
+    @apply absolute -top-px left-2.5 w-5 h-px bg-mission-accent;
+  }
+
+  .mission-border::after {
+    content: '';
+    @apply absolute -bottom-px right-2.5 w-5 h-px bg-mission-accent;
+  }
+
+  .archive-header {
+    @apply bg-linear-to-r from-mission-accent/10 to-transparent border-l-2 border-mission-accent;
+  }
+
+  .mission-card {
+    @apply bg-mission-ink/80 border border-mission-border relative p-4 transition-all duration-300;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .mission-card:hover {
+    @apply bg-white/5 border-mission-accent/40;
+    box-shadow: 
+      inset 0 0 20px rgba(0, 255, 65, 0.05),
+      0 0 15px rgba(0, 255, 65, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .mission-card::before {
+    content: '';
+    @apply absolute -top-px left-2.5 w-6 h-px bg-mission-accent shadow-[0_0_5px_rgba(0,255,65,0.8)];
+    transition: width 0.3s ease;
+  }
+
+  .mission-card:hover::before {
+    @apply w-12;
+  }
+
+  .mission-card::after {
+    content: '';
+    @apply absolute -bottom-px right-2.5 w-6 h-px bg-mission-accent shadow-[0_0_5px_rgba(0,255,65,0.8)];
+    transition: width 0.3s ease;
+  }
+
+  .mission-card:hover::after {
+    @apply w-12;
+  }
+
+  .metallic-edge {
+    @apply absolute inset-0 pointer-events-none opacity-20 transition-opacity duration-300;
+    background: linear-gradient(135deg, rgba(100, 100, 100, 0.1) 0%, transparent 20%, transparent 80%, rgba(100, 100, 100, 0.1) 100%);
+  }
+
+  .mission-card:hover .metallic-edge {
+    @apply opacity-40;
+  }
+
+  .classified-label {
+    @apply absolute -top-3 -right-3 bg-red-600/20 border border-red-600/40 text-red-500 px-2 py-0.5 text-[7px] font-bold uppercase tracking-widest rotate-12 pointer-events-none opacity-40 group-hover:opacity-80 transition-opacity;
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.2);
+  }
+
+  .scanline {
+    @apply pointer-events-none fixed inset-0 z-50 opacity-20;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 65, 0.04) 50%);
+    background-size: 100% 4px;
+    animation: scanline 20s linear infinite;
+  }
+
+  .status-active {
+    animation: blink 2s infinite;
+  }
+
+  .perspective-container {
+    perspective: 1500px;
+    perspective-origin: 50% 50%;
+  }
+
+  .hallway-room {
+    transform-style: preserve-3d;
+  }
+
+  .tunnel-grid {
+    background: 
+      linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
+    background-size: 100px 100px;
+    background-position: center center;
+    transform: rotateX(90deg) translateZ(-500px);
+    width: 200%;
+    height: 2000px;
+    left: -50%;
+    position: absolute;
+  }
+
+  .tunnel-grid-top {
+    transform: rotateX(-90deg) translateZ(-400px);
+    top: -1500px;
+    background: 
+      linear-gradient(to bottom, rgba(0, 255, 65, 0) 50%, rgba(0, 255, 65, 0.1)),
+      linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 80px 80px, 80px 80px;
+  }
+
+  .tunnel-grid-bottom {
+    transform: rotateX(90deg) translateZ(-400px);
+    bottom: -1500px;
+    background: 
+      linear-gradient(to top, rgba(0, 255, 65, 0) 50%, rgba(0, 255, 65, 0.1)),
+      linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 80px 80px, 80px 80px;
+  }
+
+  .fog-layer {
+    @apply absolute inset-0 pointer-events-none;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 255, 65, 0.03) 0%, transparent 70%);
+    filter: blur(40px);
+  }
+
+  .ambient-glow {
+    @apply absolute rounded-full;
+    background: radial-gradient(circle, rgba(0, 255, 65, 0.15) 0%, transparent 80%);
+    filter: blur(60px);
+  }
+
+  .vignette {
+    @apply fixed inset-0 pointer-events-none z-40;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+  }
+
+  .depth-fade {
+    @apply fixed inset-0 pointer-events-none z-10;
+    background: linear-gradient(to bottom, rgba(5, 5, 5, 0.8) 0%, transparent 20%, transparent 80%, rgba(5, 5, 5, 0.8) 100%);
+  }
+
+  .particle {
+    @apply absolute rounded-full bg-mission-accent/40;
+    width: 2px;
+    height: 2px;
+  }
+
+  .door-glitch {
+    animation: door-glitch 0.3s steps(1) infinite;
+  }
+
+  @keyframes door-glitch {
+    0% { clip-path: inset(0 0 0 0); }
+    10% { clip-path: inset(10% 0 85% 0); }
+    20% { clip-path: inset(80% 0 5% 0); }
+    30% { clip-path: inset(0 0 0 0); }
+  }
+
+  /* ── Architecture Flow ───────────────────────── */
+
+  .arch-flow-container {
+    @apply relative z-10 mt-3 mb-1 py-3 px-3;
+    border: 1px solid rgba(0, 255, 65, 0.08);
+    background: rgba(0, 255, 65, 0.02);
+  }
+
+  .arch-flow-label {
+    @apply font-mono uppercase tracking-[0.35em] text-mission-accent/30 mb-2.5;
+    font-size: 6px;
+    letter-spacing: 0.35em;
+  }
+
+  .arch-flow-pipeline {
+    @apply flex items-center flex-wrap gap-y-2;
+  }
+
+  .arch-flow-step {
+    @apply flex items-center;
+  }
+
+  .arch-flow-node {
+    @apply relative flex items-center gap-1.5 px-2 py-1;
+    border: 1px solid rgba(0, 255, 65, 0.2);
+    background: rgba(0, 255, 65, 0.04);
+    transition: all 0.25s ease;
+  }
+
+  .arch-flow-node:hover {
+    border-color: rgba(0, 255, 65, 0.5);
+    background: rgba(0, 255, 65, 0.08);
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.1);
+  }
+
+  .arch-flow-node-text {
+    @apply font-mono uppercase text-mission-accent;
+    font-size: 7px;
+    letter-spacing: 0.2em;
+    white-space: nowrap;
+  }
+
+  .arch-flow-pulse {
+    @apply inline-block w-1 h-1 rounded-full bg-mission-accent;
+    box-shadow: 0 0 4px rgba(0, 255, 65, 0.6);
+    animation: arch-pulse 2.5s ease-in-out infinite;
+  }
+
+  .arch-flow-arrow {
+    @apply flex items-center mx-1 text-mission-accent/40;
+    transform-origin: left center;
+  }
+
+  @keyframes arch-pulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* ── Dossier Card ────────────────────────────── */
+
+  .dossier-card {
+    @apply relative p-6 md:p-8;
+    border: 1px solid rgba(0, 255, 65, 0.15);
+    background:
+      linear-gradient(135deg, rgba(0, 255, 65, 0.03) 0%, transparent 40%, transparent 60%, rgba(0, 255, 65, 0.02) 100%),
+      rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(12px);
+    box-shadow:
+      0 0 30px rgba(0, 255, 65, 0.04),
+      inset 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .dossier-card:hover {
+    border-color: rgba(0, 255, 65, 0.25);
+    box-shadow:
+      0 0 40px rgba(0, 255, 65, 0.06),
+      inset 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .dossier-scanline {
+    @apply absolute left-0 right-0 h-px pointer-events-none z-20;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 255, 65, 0.3) 20%,
+      rgba(0, 255, 65, 0.6) 50%,
+      rgba(0, 255, 65, 0.3) 80%,
+      transparent 100%
+    );
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.3);
+    animation: dossier-scan 4s ease-in-out infinite;
+  }
+
+  @keyframes dossier-scan {
+    0%, 100% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  .dossier-holo-shimmer {
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(0, 255, 65, 0.08) 45%,
+      rgba(0, 255, 65, 0.15) 50%,
+      rgba(0, 255, 65, 0.08) 55%,
+      transparent 70%
+    );
+    background-size: 200% 100%;
+    animation: holo-shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes holo-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  .dossier-field {
+    @apply py-2.5 border-b border-mission-accent/5 transition-all duration-200;
+  }
+
+  .dossier-field:hover {
+    @apply border-mission-accent/15;
+    background: linear-gradient(90deg, rgba(0, 255, 65, 0.02) 0%, transparent 100%);
+  }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-mission-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-mission-accent/20 hover:bg-mission-accent/40;
+}
