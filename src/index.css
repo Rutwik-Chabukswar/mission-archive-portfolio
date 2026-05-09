@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -326,6 +326,65 @@
   .dossier-field:hover {
     @apply border-mission-accent/15;
     background: linear-gradient(90deg, rgba(0, 255, 65, 0.02) 0%, transparent 100%);
+  }
+
+  /* ── Arsenal Wall ────────────────────────────── */
+
+  .arsenal-wall {
+    @apply relative;
+  }
+
+  .arsenal-tabs {
+    @apply flex flex-wrap gap-2 mb-6;
+  }
+
+  .arsenal-tab {
+    @apply flex items-center gap-2 px-4 py-2.5 border border-mission-accent/10 bg-transparent cursor-pointer transition-all duration-200;
+  }
+
+  .arsenal-tab:hover {
+    @apply border-mission-accent/30 bg-mission-accent/5;
+  }
+
+  .arsenal-tab--active {
+    @apply border-mission-accent/50 bg-mission-accent/10;
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.08), inset 0 0 15px rgba(0, 255, 65, 0.03);
+  }
+
+  .arsenal-tab--active .mono {
+    @apply text-mission-accent;
+  }
+
+  .arsenal-grid-container {
+    @apply relative p-6;
+    border: 1px solid rgba(0, 255, 65, 0.1);
+    background: rgba(10, 10, 10, 0.6);
+  }
+
+  .arsenal-grid {
+    @apply grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3;
+  }
+
+  .arsenal-node {
+    @apply relative p-4 cursor-default transition-all duration-250 overflow-hidden;
+    border: 1px solid rgba(0, 255, 65, 0.1);
+    background: rgba(0, 255, 65, 0.02);
+  }
+
+  .arsenal-node:hover {
+    border-color: rgba(0, 255, 65, 0.35);
+    background: rgba(0, 255, 65, 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 255, 65, 0.08);
+  }
+
+  .arsenal-node-glow {
+    @apply absolute inset-0 pointer-events-none opacity-0 transition-opacity duration-300;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, 0.08) 0%, transparent 70%);
+  }
+
+  .arsenal-node:hover .arsenal-node-glow {
+    @apply opacity-100;
   }
 }
 

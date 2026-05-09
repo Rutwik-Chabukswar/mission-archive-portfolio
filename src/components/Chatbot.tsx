@@ -1,34 +1,147 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, Terminal } from "lucide-react";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  sources?: string[];
+  isStreaming?: boolean;
+}
+
+function TypewriterText({ 
+  content, 
+  isStreaming, 
+  onComplete 
+}: { 
+  content: string; 
+  isStreaming?: boolean; 
+  onComplete?: () => void 
+}) {
+  const [displayed, setDisplayed] = useState(isStreaming ? "" : content);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      setDisplayed(content);
+      return;
+    }
+
+    let i = 0;
+    const timer = setInterval(() => {
+      i += 3; // Fast typing speed
+      setDisplayed(content.slice(0, i));
+      if (i >= content.length) {
+        clearInterval(timer);
+        if (onComplete) onComplete();
+      }
+    }, 10);
+
+    return () => clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      {displayed}
+      {isStreaming && displayed.length < content.length && (
+        <span className="inline-block w-1.5 h-3 ml-1 bg-mission-accent align-baseline animate-pulse shadow-[0_0_5px_rgba(0,255,65,0.8)]" />
+      )}
+    </>
+  );
+}
+
+function SourceCollapsible({ sources }: { sources: string[] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Deduplicate and clean sources
+  const uniqueSources = Array.from(new Set(sources))
+    .map(s => s.trim().replace(/\n+/g, ' '))
+    .filter(s => s.length > 10);
+
+  if (!uniqueSources || uniqueSources.length === 0) return null;
+
+  return (
+    <div className="mt-4 border-t border-mission-accent/20 pt-3">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-mission-accent/70 hover:text-mission-accent hover:bg-mission-accent/10 px-2 py-1.5 -ml-2 rounded-sm transition-all font-mono"
+      >
+        <span>{isOpen ? '[-]' : '[+]'}</span> VIEW_ARCHIVE_SOURCES
+      </button>
+      
+      {isOpen && (
+        <motion.div 
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          className="mt-3 space-y-2 overflow-hidden"
+        >
+          {uniqueSources.slice(0, 5).map((source, idx) => {
+            const snippet = source.length > 120 ? source.slice(0, 120) + "..." : source;
+            return (
+              <div key={idx} className="p-3 bg-black/50 border border-mission-accent/10 rounded-sm relative overflow-hidden group hover:border-mission-accent/30 transition-colors">
+                <div className="absolute top-0 left-0 w-1 h-full bg-mission-accent/20 group-hover:bg-mission-accent/50 transition-colors" />
+                <div className="flex items-center gap-2 mb-1.5 opacity-60">
+                  <span className="mono text-[8px] text-mission-accent">FRAG_{String(idx + 1).padStart(2, '0')}</span>
+                  <span className="text-[7px] text-white/30 uppercase tracking-widest font-mono">ENCRYPTED_ARCHIVE</span>
+                </div>
+                <p className="text-[11px] text-white/70 font-sans leading-relaxed">
+                  "{snippet}"
+                </p>
+              </div>
+            );
+          })}
+          {uniqueSources.length > 5 && (
+            <div className="text-[9px] text-center text-white/40 font-mono tracking-widest pt-2 pb-1">
+              + {uniqueSources.length - 5} ADDITIONAL FRAGMENTS OMITTED
+            </div>
+          )}
+        </motion.div>
+      )}
+    </div>
+  );
 }
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "initial",
-      role: "assistant",
-      content: "SYSTEM_ONLINE: Operational intelligence assistant active. How can I assist your mission briefing today?",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = sessionStorage.getItem("mission-archive-chat");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((m: any) => ({
+          ...m,
+          timestamp: new Date(m.timestamp)
+        }));
+      } catch (e) {
+        console.error("Failed to parse chat history");
+      }
+    }
+    return [
+      {
+        id: "initial",
+        role: "assistant",
+        content: "CONNECTION_ESTABLISHED: I am the AI Intelligence Terminal. I have complete access to Rutwik's classified portfolio, projects, and work experience. What would you like to know?",
+        timestamp: new Date(),
+      },
+    ];
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("mission-archive-chat", JSON.stringify(messages));
+  }, [messages]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const shortcuts = [
     "Tell me about Rutwik",
-    "Best project",
-    "Why hire him",
-    "Backend experience",
-    "AI experience",
+    "What is his strongest project?",
+    "Why should I hire him?",
+    "Explain QuickHeal experience",
+    "Explain AI experience",
+    "Explain backend experience",
   ];
 
   useEffect(() => {
@@ -52,34 +165,66 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_CHAT_API_URL || "/api/chat";
-      // This is a placeholder for the actual integration. 
-      // In a real scenario, you'd call the user's FastAPI backend here.
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
-      });
+      const apiUrl = import.meta.env.VITE_CHAT_API_URL || "http://127.0.0.1:8000/chat";
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      let response;
+      try {
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: text }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+      } catch (e: any) {
+        clearTimeout(timeoutId);
+        if (e.name === 'AbortError') {
+          throw new Error("TIMEOUT");
+        }
+        throw new Error("OFFLINE");
+      }
 
-      if (!response.ok) throw new Error("TRANS_ERROR: CONNECTION_FAILURE");
+      if (!response.ok) {
+        throw new Error("API_ERROR");
+      }
 
       const data = await response.json();
+      
+      if (!data || !data.answer || data.answer.trim() === "") {
+        throw new Error("EMPTY_RESPONSE");
+      }
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.response || "ERROR: ARCHIVE_DATA_UNAVAILABLE",
+        content: data.answer,
+        sources: data.sources,
         timestamp: new Date(),
+        isStreaming: true,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      let fallbackContent = "Unable to retrieve intelligence.";
+      
+      if (error.message === "TIMEOUT") {
+        fallbackContent = "Archive connection timeout. Unable to retrieve intelligence in time.";
+      } else if (error.message === "OFFLINE") {
+        fallbackContent = "Archive connection interrupted. The intelligence server appears to be offline.";
+      } else if (error.message === "API_ERROR") {
+        fallbackContent = "Archive connection interrupted. Data corruption detected during retrieval.";
+      } else if (error.message === "EMPTY_RESPONSE") {
+        fallbackContent = "Archive accessed, but no relevant intelligence was found.";
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "CRITICAL_ERROR: Failed to establish link with RAG_PIPELINE. Please retry or check system logs.",
+        content: fallbackContent,
         timestamp: new Date(),
+        isStreaming: true,
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -93,34 +238,47 @@ export function Chatbot() {
       <motion.button
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 right-6 z-50 p-4 bg-mission-accent text-black shadow-[0_0_20px_rgba(0,255,65,0.3)] transition-colors ${
+        className={`fixed bottom-6 right-4 md:bottom-24 md:right-6 z-[150] flex items-center gap-3 px-4 py-3 bg-mission-ink/90 border border-mission-accent/30 text-mission-accent shadow-[0_0_20px_rgba(0,255,65,0.15)] backdrop-blur-md transition-all hover:border-mission-accent hover:shadow-[0_0_30px_rgba(0,255,65,0.3)] ${
           isOpen ? "hidden" : "flex"
         }`}
       >
-        <MessageSquare size={24} />
+        <div className="relative">
+          <Terminal size={20} />
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-mission-accent rounded-full animate-pulse shadow-[0_0_8px_rgba(0,255,65,0.8)]" />
+        </div>
+        <div className="flex flex-col items-start hidden sm:flex">
+          <span className="mono text-[9px] font-bold tracking-widest leading-none mb-0.5">INTELLIGENCE_TERMINAL</span>
+          <span className="mono text-[7px] opacity-50 tracking-widest leading-none">SYSTEM_READY</span>
+        </div>
       </motion.button>
 
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 100, scale: 0.9 }}
-            className="fixed bottom-24 right-6 z-50 w-[350px] md:w-[400px] h-[500px] bg-mission-bg border border-mission-accent flex flex-col shadow-[0_0_50px_rgba(0,255,65,0.1)]"
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-0 left-0 right-0 z-[150] w-full h-[85vh] md:w-[480px] lg:w-[500px] md:h-[600px] md:bottom-24 md:right-6 md:left-auto md:max-h-[85vh] bg-mission-ink/95 backdrop-blur-xl border-t md:border border-mission-accent/30 flex flex-col shadow-[0_-10px_50px_rgba(0,0,0,0.8),md:0_10px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,255,65,0.1)] rounded-t-2xl md:rounded-sm overflow-hidden"
           >
             {/* Header */}
-            <div className="p-4 border-b border-mission-accent bg-mission-accent/5 flex items-center justify-between">
+            <div className="p-4 border-b border-mission-accent/20 bg-linear-to-r from-mission-accent/10 to-transparent flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-mission-accent status-active" />
-                <span className="mono text-[10px] tracking-widest font-bold">TACTICAL_ASSISTANT_V1</span>
+                <div className="relative flex items-center justify-center w-8 h-8 bg-mission-accent/10 border border-mission-accent/30 text-mission-accent">
+                  <Terminal size={16} />
+                  <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-mission-accent rounded-full animate-pulse" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="mono text-[10px] tracking-widest font-bold text-mission-accent">AI_INTELLIGENCE_TERMINAL</span>
+                  <span className="mono text-[7px] tracking-widest text-mission-accent/50">AWAITING_INPUT</span>
+                </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-mission-accent hover:text-white transition-colors"
+                className="text-mission-accent/50 hover:text-mission-accent transition-colors"
               >
                 <X size={18} />
               </button>
@@ -129,35 +287,57 @@ export function Chatbot() {
             {/* Messages */}
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-black/40"
+              className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 md:space-y-8 custom-scrollbar bg-black/40 shadow-[inset_0_0_30px_rgba(0,255,65,0.02)]"
             >
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
                 >
-                  <div className={`flex items-start gap-2 max-w-[85%] ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                    <div className={`p-1.5 border ${msg.role === "assistant" ? "border-mission-accent/30 text-mission-accent" : "border-white/20 text-white"}`}>
-                      {msg.role === "assistant" ? <Bot size={14} /> : <User size={14} />}
+                  <div className="flex items-center gap-2.5 mb-2 opacity-50">
+                    {msg.role === "assistant" ? <Bot size={11} className="text-mission-accent" /> : <User size={11} className="text-white" />}
+                    <span className={`mono text-[9px] tracking-[0.2em] uppercase ${msg.role === "assistant" ? "text-mission-accent" : "text-white"}`}>
+                      {msg.role === "assistant" ? "AI_SYSTEM" : "USER_CMD"}
+                    </span>
+                  </div>
+                  <div className={`p-5 max-w-[88%] rounded-sm border ${
+                    msg.role === "assistant" 
+                    ? msg.id === "initial"
+                      ? "bg-mission-accent/10 border-mission-accent/40 text-mission-accent shadow-[0_0_15px_rgba(0,255,65,0.1)]"
+                      : "bg-mission-accent/5 border-mission-accent/20 text-white/90" 
+                    : "bg-white/5 border-white/10 text-white"
+                  }`}>
+                    <div className="font-sans text-[14px] leading-[1.75] whitespace-pre-wrap">
+                      {msg.role === "assistant" ? (
+                        <TypewriterText 
+                          content={msg.content} 
+                          isStreaming={msg.isStreaming} 
+                          onComplete={() => {
+                            setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, isStreaming: false } : m));
+                          }} 
+                        />
+                      ) : (
+                        msg.content
+                      )}
                     </div>
-                    <div className={`p-3 text-[10px] mono leading-relaxed border ${
-                      msg.role === "assistant" 
-                      ? "bg-mission-accent/5 border-mission-accent/20 text-mission-accent" 
-                      : "bg-white/5 border-white/10 text-white"
-                    }`}>
-                      {msg.content}
-                    </div>
+                    {msg.role === "assistant" && !msg.isStreaming && msg.sources && msg.sources.length > 0 && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                        <SourceCollapsible sources={msg.sources} />
+                      </motion.div>
+                    )}
                   </div>
                 </div>
               ))}
               {isLoading && (
-                <div className="flex justify-start">
-                  <div className="flex items-start gap-2">
-                    <div className="p-1.5 border border-mission-accent/30 text-mission-accent">
-                      <Bot size={14} />
-                    </div>
-                    <div className="p-3 text-[10px] mono bg-mission-accent/5 border border-mission-accent/20 text-mission-accent animate-pulse">
-                      PROCESSING_QUERY...
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-2 mb-1.5 opacity-50 text-mission-accent">
+                    <Bot size={10} />
+                    <span className="mono text-[8px] tracking-[0.2em] uppercase">AI_SYSTEM</span>
+                  </div>
+                  <div className="p-4 border bg-mission-accent/5 border-mission-accent/20 text-mission-accent">
+                    <div className="flex items-center gap-3">
+                      <Loader2 size={14} className="animate-spin opacity-70" />
+                      <span className="mono text-[9px] tracking-widest">RETRIEVING_INTELLIGENCE...</span>
                     </div>
                   </div>
                 </div>
@@ -166,41 +346,46 @@ export function Chatbot() {
 
             {/* Shortcuts */}
             {messages.length === 1 && !isLoading && (
-              <div className="p-4 flex flex-wrap gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                {shortcuts.map((shortcut) => (
-                  <button
-                    key={shortcut}
-                    onClick={() => handleSend(shortcut)}
-                    className="text-[8px] mono border border-mission-accent/30 px-2 py-1 hover:bg-mission-accent hover:text-black transition-all uppercase"
-                  >
-                    {shortcut}
-                  </button>
-                ))}
+              <div className="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500 bg-black/40 shrink-0">
+                <div className="mono text-[8px] tracking-widest text-mission-accent/40">SUGGESTED_QUERIES:</div>
+                <div className="flex overflow-x-auto md:flex-wrap gap-2 pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4 md:mx-0 md:px-0">
+                  {shortcuts.map((shortcut) => (
+                    <button
+                      key={shortcut}
+                      onClick={() => handleSend(shortcut)}
+                      className="whitespace-nowrap shrink-0 flex items-center gap-1.5 font-sans text-[11px] font-medium bg-mission-accent/5 border border-mission-accent/20 px-3 py-1.5 text-white/80 hover:bg-mission-accent hover:text-black transition-all hover:border-mission-accent group"
+                    >
+                      <span className="text-mission-accent group-hover:text-black transition-colors">{'>'}</span>
+                      {shortcut}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Input */}
-            <div className="p-4 border-t border-mission-accent bg-mission-ink">
+            <div className="p-3 pb-[max(env(safe-area-inset-bottom),1rem)] md:p-4 border-t border-mission-accent/20 bg-mission-ink shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSend(input);
                 }}
-                className="flex gap-2"
+                className="flex items-center gap-2 md:gap-3 bg-black/60 border border-mission-accent/20 p-1 focus-within:border-mission-accent/60 transition-colors"
               >
+                <span className="pl-3 text-mission-accent/50 mono text-xs">{'>'}</span>
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="ENTER COMMAND..."
-                  className="flex-1 bg-black/50 border border-mission-border p-2 focus:border-mission-accent outline-none text-[10px] mono uppercase placeholder:opacity-30"
+                  placeholder="Enter command or interrogate archive..."
+                  className="flex-1 bg-transparent p-2 outline-none font-sans text-[13px] text-white/90 placeholder:text-white/30 placeholder:font-mono placeholder:text-[10px] placeholder:uppercase placeholder:tracking-widest"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="p-2 bg-mission-accent text-black disabled:opacity-50 transition-opacity"
+                  className="p-2.5 mr-1 bg-mission-accent/10 text-mission-accent hover:bg-mission-accent hover:text-black disabled:opacity-30 disabled:hover:bg-mission-accent/10 disabled:hover:text-mission-accent transition-colors"
                 >
-                  <Send size={16} />
+                  <Send size={14} />
                 </button>
               </form>
             </div>

@@ -137,36 +137,48 @@ export function HallwayLayout({ children, activeIndex, onNavigate }: HallwayProp
             key={activeIndex}
             initial={{ 
               opacity: 0, 
-              scale: 0.8, 
-              z: -1500,
-              rotateX: 10,
-              filter: "blur(20px)" 
+              scale: 0.98,
+              clipPath: "inset(0 50% 0 50%)",
+              filter: "brightness(2.5) blur(8px)" 
             }}
             animate={{ 
               opacity: 1, 
-              scale: 1, 
-              z: 0,
-              rotateX: 0,
-              filter: "blur(0px)" 
+              scale: 1,
+              clipPath: "inset(0 0% 0 0%)",
+              filter: "brightness(1) blur(0px)" 
             }}
             exit={{ 
               opacity: 0, 
-              scale: 1.2, 
-              z: 1500,
-              rotateX: -10,
-              filter: "blur(40px)" 
+              scale: 1.02,
+              clipPath: "inset(0 50% 0 50%)",
+              filter: "brightness(0.5) blur(8px)" 
             }}
             transition={{ 
-              duration: 1.5, 
-              ease: [0.16, 1, 0.3, 1] 
+              duration: 0.6, 
+              ease: [0.22, 1, 0.36, 1] 
             }}
             onAnimationStart={() => setIsTransitioning(true)}
             onAnimationComplete={() => setIsTransitioning(false)}
-            className="w-full h-full overflow-y-auto custom-scrollbar"
+            className="w-full h-full overflow-y-auto custom-scrollbar relative"
           >
-            {/* Transition Glitch Overlay */}
+            {/* Cinematic Transition Overlay (Scanning & Lighting) */}
             {isTransitioning && (
-              <div className="fixed inset-0 z-[100] bg-mission-accent/5 door-glitch pointer-events-none" />
+              <>
+                <div className="fixed inset-0 z-[100] pointer-events-none overflow-hidden mix-blend-screen">
+                  <motion.div 
+                    initial={{ top: "-10%" }}
+                    animate={{ top: "110%" }}
+                    transition={{ duration: 0.5, ease: "linear" }}
+                    className="absolute left-0 right-0 h-1 bg-mission-accent shadow-[0_0_40px_rgba(0,255,65,1)]"
+                  />
+                </div>
+                <motion.div 
+                  initial={{ opacity: 0.6 }}
+                  animate={{ opacity: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="fixed inset-0 z-[90] bg-mission-accent/15 pointer-events-none mix-blend-screen"
+                />
+              </>
             )}
 
             {/* Header info for the current "room" */}

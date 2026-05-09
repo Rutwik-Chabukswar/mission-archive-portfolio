@@ -75,18 +75,52 @@ export const EXPERIENCE = [
 export const SKILLS = [
   {
     category: "FRONTEND",
-    items: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"]
+    items: [
+      { name: "React", usedIn: "SarkariSaathi, AD Dashboard, Portfolio" },
+      { name: "Next.js", usedIn: "CarWash Platform, Internal Tools" },
+      { name: "TypeScript", usedIn: "All production projects" },
+      { name: "Tailwind CSS", usedIn: "CarWash Platform, Portfolio" },
+      { name: "Framer Motion", usedIn: "Portfolio, Landing Pages" }
+    ]
   },
   {
     category: "BACKEND",
-    items: ["Node.js", "Python", "Go", "PostgreSQL", "Redis"]
+    items: [
+      { name: "Node.js", usedIn: "SarkariSaathi, CarWash Platform" },
+      { name: "Python", usedIn: "AI Compliance Agent, AD Dashboard" },
+      { name: "FastAPI", usedIn: "AI Compliance Agent, SarkariSaathi" },
+      { name: "PostgreSQL", usedIn: "SarkariSaathi, Enterprise Apps" },
+      { name: "Redis", usedIn: "Caching layer at Hanumatrix" }
+    ]
   },
   {
-    category: "AI / ML",
-    items: ["PyTorch", "HuggingFace", "LangChain", "Vector Databases", "Prompt Engineering"]
+    category: "AI SYSTEMS",
+    items: [
+      { name: "LangChain", usedIn: "AI Compliance Agent" },
+      { name: "OpenAI API", usedIn: "AI Compliance Agent, Chatbots" },
+      { name: "Gemini API", usedIn: "SarkariSaathi" },
+      { name: "ChromaDB", usedIn: "SarkariSaathi RAG Pipeline" },
+      { name: "Prompt Engineering", usedIn: "All AI-driven projects" }
+    ]
   },
   {
     category: "INFRASTRUCTURE",
-    items: ["Docker", "Kubernetes", "AWS", "CI/CD Pipelines", "Linux"]
+    items: [
+      { name: "Docker", usedIn: "AI Compliance Agent, Deployments" },
+      { name: "AWS", usedIn: "Hanumatrix Production Infra" },
+      { name: "CI/CD", usedIn: "GitHub Actions across all repos" },
+      { name: "Linux", usedIn: "Server administration, Dev environments" },
+      { name: "Firebase", usedIn: "CarWash Platform" }
+    ]
+  },
+  {
+    category: "TOOLS",
+    items: [
+      { name: "Git", usedIn: "Version control across all projects" },
+      { name: "Figma", usedIn: "UI/UX design for CarWash, Portfolio" },
+      { name: "Postman", usedIn: "API testing & documentation" },
+      { name: "VS Code", usedIn: "Primary development environment" },
+      { name: "Supabase", usedIn: "AD Dashboard backend" }
+    ]
   }
 ];

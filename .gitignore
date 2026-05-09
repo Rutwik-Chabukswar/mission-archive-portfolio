@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Python & Backend
+backend/venv/
+backend/__pycache__/
+backend/chroma_db/
+*.pyc

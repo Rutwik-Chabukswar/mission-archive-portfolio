@@ -1,6 +1,8 @@
-import { motion } from "motion/react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { ChevronRight, Cpu, Lock } from "lucide-react";
 import { CONFIG } from "../data";
+import { BootSequence } from "./BootSequence";
 
 interface HeroProps {
   onEnter?: () => void;
@@ -8,8 +10,18 @@ interface HeroProps {
 }
 
 export function Hero({ onEnter }: HeroProps) {
+  const [isBooting, setIsBooting] = useState(false);
+
+  const handleEnterClick = () => {
+    setIsBooting(true);
+  };
+
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center pt-24 overflow-hidden">
+    <>
+      <AnimatePresence>
+        {isBooting && <BootSequence onComplete={() => { if(onEnter) onEnter(); }} />}
+      </AnimatePresence>
+      <section className="relative min-h-[90vh] flex items-center justify-center pt-24 overflow-hidden">
       {/* Grid Pattern */}
       <div className="absolute inset-0 z-0 opacity-30" style={{ backgroundImage: 'radial-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
@@ -62,7 +74,7 @@ export function Hero({ onEnter }: HeroProps) {
 
             <div className="flex flex-col sm:flex-row items-center gap-8">
               <button
-                onClick={onEnter}
+                onClick={handleEnterClick}
                 className="w-full sm:w-auto bg-mission-accent text-black font-mono font-bold py-4 px-12 text-sm hover:bg-white transition-colors tracking-widest cursor-pointer group"
               >
                 <span>ENTER MISSION ARCHIVE</span>
@@ -123,5 +135,6 @@ export function Hero({ onEnter }: HeroProps) {
         </div>
       </div>
     </section>
+    </>
   );
 }

@@ -18,10 +18,22 @@ import { motion } from "motion/react";
 import { ArchiveHub } from "./components/ArchiveHub";
 
 export default function App() {
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Synchronize hash with active index for direct linking
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile(); // Check immediately
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Synchronize hash with active index for direct linking (desktop only)
+  useEffect(() => {
+    if (isMobile) return;
+
     const handleHashChange = () => {
       const hash = window.location.hash.replace("#", "");
       const indexMap: Record<string, number> = {
@@ -35,16 +47,27 @@ export default function App() {
       };
       if (indexMap[hash] !== undefined) {
         setActiveIndex(indexMap[hash]);
+      } else if (hash === "") {
+        setActiveIndex(0);
       }
     };
 
     window.addEventListener("hashchange", handleHashChange);
     handleHashChange(); // Initial check
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+  }, [isMobile]);
 
   const sections: ReactNode[] = [
-    <Hero key="hero" onEnter={() => setActiveIndex(-1)} />, // Now enters hub
+    <div id="hero" key="hero">
+      <Hero onEnter={() => {
+        if (isMobile) {
+          const aboutSection = document.getElementById("about");
+          if (aboutSection) aboutSection.scrollIntoView({ behavior: "smooth" });
+        } else {
+          setActiveIndex(-1);
+        }
+      }} />
+    </div>,
     <About key="about" />,
     <Experience key="experience" />,
     <Projects key="projects" />,
@@ -53,22 +76,28 @@ export default function App() {
   ];
 
   return (
-    <div className="relative min-h-screen bg-mission-bg selection:bg-mission-accent selection:text-black font-mono">
+    <div className="relative min-h-screen bg-mission-bg selection:bg-mission-accent selection:text-black font-mono overflow-x-hidden">
       {/* Global Background FX */}
       <div className="scanline" />
       
       <Navigation />
       
-      <HallwayLayout activeIndex={activeIndex} onNavigate={setActiveIndex}>
-        {activeIndex === -1 ? (
-          <ArchiveHub key="hub" onSelect={setActiveIndex} />
-        ) : (
-          sections[activeIndex]
-        )}
-      </HallwayLayout>
+      {isMobile ? (
+        <div className="flex flex-col w-full">
+          {sections}
+        </div>
+      ) : (
+        <HallwayLayout activeIndex={activeIndex} onNavigate={setActiveIndex}>
+          {activeIndex === -1 ? (
+            <ArchiveHub key="hub" onSelect={setActiveIndex} />
+          ) : (
+            sections[activeIndex]
+          )}
+        </HallwayLayout>
+      )}
 
-      {/* vertical return button if in a section */}
-      {activeIndex !== -1 && (
+      {/* vertical return button if in a section (Desktop Only) */}
+      {!isMobile && activeIndex !== -1 && (
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -79,15 +108,19 @@ export default function App() {
         </motion.button>
       )}
 
-      {/* Vertical edge decorative elements */}
-      <div className="fixed left-2 top-0 bottom-0 w-px bg-mission-accent/10 pointer-events-none z-50" />
-      <div className="fixed right-2 top-0 bottom-0 w-px bg-mission-accent/10 pointer-events-none z-50" />
-      
-      {/* Corner Brackets */}
-      <div className="fixed top-20 left-2 w-4 h-4 border-t border-l border-mission-accent/30 pointer-events-none z-50" />
-      <div className="fixed top-20 right-2 w-4 h-4 border-t border-r border-mission-accent/30 pointer-events-none z-50" />
-      <div className="fixed bottom-20 left-2 w-4 h-4 border-b border-l border-mission-accent/30 pointer-events-none z-50" />
-      <div className="fixed bottom-20 right-2 w-4 h-4 border-b border-r border-mission-accent/30 pointer-events-none z-50" />
+      {/* Vertical edge decorative elements (Desktop Only) */}
+      {!isMobile && (
+        <>
+          <div className="fixed left-2 top-0 bottom-0 w-px bg-mission-accent/10 pointer-events-none z-50" />
+          <div className="fixed right-2 top-0 bottom-0 w-px bg-mission-accent/10 pointer-events-none z-50" />
+          
+          {/* Corner Brackets */}
+          <div className="fixed top-20 left-2 w-4 h-4 border-t border-l border-mission-accent/30 pointer-events-none z-50" />
+          <div className="fixed top-20 right-2 w-4 h-4 border-t border-r border-mission-accent/30 pointer-events-none z-50" />
+          <div className="fixed bottom-20 left-2 w-4 h-4 border-b border-l border-mission-accent/30 pointer-events-none z-50" />
+          <div className="fixed bottom-20 right-2 w-4 h-4 border-b border-r border-mission-accent/30 pointer-events-none z-50" />
+        </>
+      )}
 
       <Chatbot />
     </div>
