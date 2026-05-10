@@ -10,5 +10,4 @@ coverage/
 # Python & Backend
 backend/venv/
 backend/__pycache__/
-backend/chroma_db/
 *.pyc

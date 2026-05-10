@@ -15,16 +15,8 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Pre-loading HuggingFace embedding models and vectorstore...")
-    
-    # Auto-ingest if DB is missing (crucial for Render deployment)
-    if not os.path.exists(CHROMA_DB_DIR) or not os.listdir(CHROMA_DB_DIR):
-        print("chroma_db not found. Running automatic ingestion for deployment...")
-        ingest_documents()
-        
-    from query import get_vectorstore
-    get_vectorstore()
-    print("Models pre-loaded successfully. System ready.")
+    # Lightweight startup: Heavy ML models (Embeddings, Chroma) 
+    # are now lazy-loaded on the first /chat request to prevent OOM errors on Render Free Tier.
     yield
 
 # Initialize FastAPI application

@@ -1,8 +1,6 @@
 import os
 # pyrefly: ignore [missing-import]
 from langchain_groq import ChatGroq
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
@@ -22,8 +20,21 @@ def get_vectorstore():
     if _vectorstore is None:
         if not os.path.exists(CHROMA_DB_DIR) or not os.listdir(CHROMA_DB_DIR):
             return None
-        _embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        _vectorstore = Chroma(persist_directory=CHROMA_DB_DIR, embedding_function=_embeddings)
+            
+        print("Lazy-loading HuggingFace embeddings and Chroma DB to save memory...")
+        # Lazy import heavy ML libraries ONLY when needed
+        from langchain_huggingface import HuggingFaceEmbeddings
+        from langchain_community.vectorstores import Chroma
+        
+        # Initialize with CPU explicitly to save memory
+        _embeddings = HuggingFaceEmbeddings(
+            model_name="all-MiniLM-L6-v2",
+            model_kwargs={'device': 'cpu'},
+        )
+        _vectorstore = Chroma(
+            persist_directory=CHROMA_DB_DIR, 
+            embedding_function=_embeddings
+        )
     return _vectorstore
 
 def get_answer(question: str):
