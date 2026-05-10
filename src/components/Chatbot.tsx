@@ -210,7 +210,12 @@ export function Chatbot() {
     setIsLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_CHAT_API_URL || "http://127.0.0.1:8000/chat";
+      // Mobile iPhone Safari strictly blocks mixed content (HTTP over HTTPS).
+      // We ensure the fallback is the secure production backend, not localhost.
+      let baseUrl = import.meta.env.VITE_CHAT_API_URL || "https://mission-archive-backend.onrender.com";
+      baseUrl = baseUrl.replace(/\/$/, ""); // Strip trailing slash
+      const apiUrl = baseUrl.endsWith("/chat") ? baseUrl : `${baseUrl}/chat`;
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       
@@ -225,10 +230,11 @@ export function Chatbot() {
         clearTimeout(timeoutId);
       } catch (e: any) {
         clearTimeout(timeoutId);
+        console.error("Fetch request failed:", e);
         if (e.name === 'AbortError') {
           throw new Error("TIMEOUT");
         }
-        throw new Error("OFFLINE");
+        throw new Error(`OFFLINE: ${e.message}`);
       }
 
       if (!response.ok) {
@@ -258,7 +264,8 @@ export function Chatbot() {
       
       if (error.message === "TIMEOUT") {
         fallbackContent = "Archive connection timeout. Unable to retrieve intelligence in time.";
-      } else if (error.message === "OFFLINE") {
+      } else if (error.message.startsWith("OFFLINE")) {
+        console.error("Network Error Details:", error.message);
         fallbackContent = "Archive connection interrupted. The intelligence server appears to be offline.";
       } else if (error.message === "API_ERROR") {
         fallbackContent = "Archive connection interrupted. Data corruption detected during retrieval.";
