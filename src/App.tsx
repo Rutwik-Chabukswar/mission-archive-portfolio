@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, ReactNode } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
 import { About } from "./components/About";
@@ -13,13 +14,14 @@ import { Skills } from "./components/Skills";
 import { Contact } from "./components/Contact";
 import { HallwayLayout } from "./components/HallwayLayout";
 import { Chatbot } from "./components/Chatbot";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 import { ArchiveHub } from "./components/ArchiveHub";
 
 export default function App() {
-  const [activeIndex, setActiveIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -30,50 +32,45 @@ export default function App() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Synchronize hash with active index for direct linking (desktop only)
-  useEffect(() => {
-    if (isMobile) return;
+  const getActiveIndex = (pathname: string) => {
+    if (pathname === "/") return 0;
+    if (pathname === "/archive/about") return 1;
+    if (pathname === "/archive/experience") return 2;
+    if (pathname === "/archive/projects") return 3;
+    if (pathname === "/archive/skills") return 4;
+    if (pathname === "/archive/contact") return 5;
+    return -1; // Hub is /archive
+  };
 
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "");
-      const indexMap: Record<string, number> = {
-        "hub": -1,
-        "hero": 0,
-        "about": 1,
-        "experience": 2,
-        "projects": 3,
-        "skills": 4,
-        "contact": 5
-      };
-      if (indexMap[hash] !== undefined) {
-        setActiveIndex(indexMap[hash]);
-      } else if (hash === "") {
-        setActiveIndex(0);
-      }
-    };
+  const activeIndex = getActiveIndex(location.pathname);
 
-    window.addEventListener("hashchange", handleHashChange);
-    handleHashChange(); // Initial check
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [isMobile]);
+  const navigateTo = (index: number) => {
+    if (index === -1) {
+      navigate("/archive");
+      return;
+    }
+    
+    if (index === 6) { // Chatbot trigger
+      window.dispatchEvent(new CustomEvent('open-chatbot'));
+      return;
+    }
+    
+    const paths = ["/", "/archive/about", "/archive/experience", "/archive/projects", "/archive/skills", "/archive/contact"];
+    navigate(paths[index] || "/");
+  };
 
-  const sections: ReactNode[] = [
-    <div id="hero" key="hero">
-      <Hero onEnter={() => {
-        if (isMobile) {
-          const aboutSection = document.getElementById("about");
-          if (aboutSection) aboutSection.scrollIntoView({ behavior: "smooth" });
-        } else {
-          setActiveIndex(-1);
-        }
-      }} />
-    </div>,
-    <About key="about" />,
-    <Experience key="experience" />,
-    <Projects key="projects" />,
-    <Skills key="skills" />,
-    <Contact key="contact" />
-  ];
+  const AppRoutes = (
+    <Routes location={location} key={location.pathname === "/" ? "hero" : "archive"}>
+      <Route path="/" element={<Hero onEnter={() => navigateTo(-1)} />} />
+      <Route path="/archive" element={<ArchiveHub key="hub" onSelect={navigateTo} />} />
+      <Route path="/archive/about" element={<About />} />
+      <Route path="/archive/experience" element={<Experience />} />
+      <Route path="/archive/projects" element={<Projects />} />
+      <Route path="/archive/skills" element={<Skills />} />
+      <Route path="/archive/contact" element={<Contact />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 
   return (
     <div className="relative min-h-screen bg-mission-bg selection:bg-mission-accent selection:text-black font-mono overflow-x-hidden">
@@ -83,26 +80,22 @@ export default function App() {
       <Navigation />
       
       {isMobile ? (
-        <div className="flex flex-col w-full">
-          {sections}
+        <div className="pt-20 pb-24">
+          {AppRoutes}
         </div>
       ) : (
-        <HallwayLayout activeIndex={activeIndex} onNavigate={setActiveIndex}>
-          {activeIndex === -1 ? (
-            <ArchiveHub key="hub" onSelect={setActiveIndex} />
-          ) : (
-            sections[activeIndex]
-          )}
+        <HallwayLayout activeIndex={activeIndex} onNavigate={navigateTo}>
+          {AppRoutes}
         </HallwayLayout>
       )}
 
-      {/* vertical return button if in a section (Desktop Only) */}
-      {!isMobile && activeIndex !== -1 && (
+      {/* vertical return button if in a section (Mobile and Desktop) */}
+      {activeIndex !== -1 && activeIndex !== 0 && (
         <motion.button
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          onClick={() => setActiveIndex(-1)}
-          className="fixed left-6 bottom-24 z-[60] flex items-center gap-2 mono text-[10px] text-mission-accent hover:text-white transition-colors rotate-270 origin-left"
+          onClick={() => navigateTo(-1)}
+          className={`fixed left-4 ${isMobile ? "top-20 z-[200] origin-left scale-90" : "bottom-24 z-[60] rotate-270 origin-left"} flex items-center gap-2 mono text-[10px] text-mission-accent hover:text-white transition-colors bg-mission-bg/80 px-2 py-1 border border-mission-accent/20 backdrop-blur-sm`}
         >
           <span>[ RETURN_TO_DIRECTORY ]</span>
         </motion.button>

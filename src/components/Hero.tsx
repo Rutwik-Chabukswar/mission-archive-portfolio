@@ -21,7 +21,15 @@ export function Hero({ onEnter }: HeroProps) {
       <AnimatePresence>
         {isBooting && <BootSequence onComplete={() => { if(onEnter) onEnter(); }} />}
       </AnimatePresence>
-      <section className="relative min-h-[90vh] flex items-center justify-center pt-24 overflow-hidden">
+      <motion.section 
+        animate={isBooting ? { 
+          scale: [1, 1.02, 1.01, 1.05, 1.1], 
+          opacity: [1, 0.8, 0.9, 0.4, 0], 
+          filter: ["brightness(1) blur(0px)", "brightness(1.5) contrast(1.5) blur(1px)", "brightness(1) blur(0px)", "brightness(2) blur(2px)", "brightness(3) blur(4px)"] 
+        } : { scale: 1, opacity: 1, filter: "brightness(1) blur(0px)" }}
+        transition={{ duration: 1.6, times: [0, 0.2, 0.4, 0.8, 1], ease: "easeInOut" }}
+        className="relative min-h-[90vh] flex items-center justify-center pt-24 overflow-hidden"
+      >
       {/* Grid Pattern */}
       <div className="absolute inset-0 z-0 opacity-30" style={{ backgroundImage: 'radial-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
@@ -74,6 +82,7 @@ export function Hero({ onEnter }: HeroProps) {
 
             <div className="flex flex-col sm:flex-row items-center gap-8">
               <button
+                type="button"
                 onClick={handleEnterClick}
                 className="w-full sm:w-auto bg-mission-accent text-black font-mono font-bold py-4 px-12 text-sm hover:bg-white transition-colors tracking-widest cursor-pointer group"
               >
@@ -134,7 +143,7 @@ export function Hero({ onEnter }: HeroProps) {
           </div>
         </div>
       </div>
-    </section>
+    </motion.section>
     </>
   );
 }

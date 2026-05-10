@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Lock, FileText, Briefcase, Archive, Shield, MessageSquare } from "lucide-react";
+import { Lock, FileText, Briefcase, Archive, Shield, MessageSquare, Terminal } from "lucide-react";
 
 interface HubProps {
   onSelect: (index: number) => void;
@@ -8,12 +8,12 @@ interface HubProps {
 
 export function ArchiveHub({ onSelect }: HubProps) {
   const missions = [
-    { id: "hero", label: "INIT_SEQUENCE", icon: <FileText />, desc: "PRIMARY OPERATIVE IDENTITY" },
-    { id: "about", label: "PERSONNEL_FILE", icon: <Lock />, desc: "AGENT BIOMETRICS & HISTORY" },
-    { id: "experience", label: "OPS_HISTORY", icon: <Briefcase />, desc: "FIELD ENGAGEMENT LOGS" },
-    { id: "projects", label: "ACTIVE_ARCHIVE", icon: <Archive />, desc: "SYSTEM DEPLOYMENT DATA" },
-    { id: "skills", label: "ARSENAL_DATA", icon: <Shield />, desc: "TECHNOLOGICAL CAPABILITIES" },
-    { id: "contact", label: "SECURE_COMMS", icon: <MessageSquare />, desc: "TRANSMISSION PORTAL" },
+    { routeIndex: 1, id: "about", label: "PERSONNEL_FILE", icon: <Lock />, desc: "AGENT BIOMETRICS & HISTORY" },
+    { routeIndex: 2, id: "experience", label: "MISSION_LOGS", icon: <Briefcase />, desc: "FIELD ENGAGEMENT LOGS" },
+    { routeIndex: 3, id: "projects", label: "OPERATIONS", icon: <Archive />, desc: "SYSTEM DEPLOYMENT DATA" },
+    { routeIndex: 4, id: "skills", label: "ARSENAL", icon: <Shield />, desc: "TECHNOLOGICAL CAPABILITIES" },
+    { routeIndex: 5, id: "contact", label: "COMMUNICATION_LINE", icon: <MessageSquare />, desc: "TRANSMISSION PORTAL" },
+    { routeIndex: 6, id: "chatbot", label: "INTELLIGENCE_TERMINAL", icon: <Terminal />, desc: "AI ARCHIVE ASSISTANT" },
   ];
 
   return (
@@ -32,7 +32,7 @@ export function ArchiveHub({ onSelect }: HubProps) {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.02, rotateY: 5 }}
-              onClick={() => onSelect(index)}
+              onClick={() => onSelect(mission.routeIndex)}
               className="mission-card group min-h-[220px] flex flex-col items-start gap-6 cursor-pointer text-left overflow-hidden"
             >
               <div className="metallic-edge" />

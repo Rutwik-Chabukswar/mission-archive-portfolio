@@ -8,6 +8,8 @@ interface Message {
   content: string;
   timestamp: Date;
   sources?: string[];
+  techWiki?: string;
+  suggestions?: string[];
   isStreaming?: boolean;
 }
 
@@ -103,6 +105,42 @@ function SourceCollapsible({ sources }: { sources: string[] }) {
   );
 }
 
+function TechWikiCollapsible({ content }: { content: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  if (!content) return null;
+
+  return (
+    <div className="mt-4 border-t border-mission-accent/20 pt-3">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-mission-accent/70 hover:text-mission-accent hover:bg-mission-accent/10 px-2 py-1.5 -ml-2 rounded-sm transition-all font-mono"
+      >
+        <span>{isOpen ? '[-]' : '[+]'}</span> OPEN_TECH_WIKI
+      </button>
+      
+      {isOpen && (
+        <motion.div 
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          className="mt-3 space-y-2 overflow-hidden"
+        >
+          <div className="p-3 bg-black/50 border border-mission-accent/20 rounded-sm relative overflow-hidden group hover:border-mission-accent/40 transition-colors">
+            <div className="absolute top-0 left-0 w-1 h-full bg-mission-accent/30 group-hover:bg-mission-accent/60 transition-colors" />
+            <div className="flex items-center gap-2 mb-2 opacity-70">
+              <span className="mono text-[8px] text-mission-accent">TECH_FILE</span>
+              <span className="text-[7px] text-white/40 uppercase tracking-widest font-mono">SYSTEM_DOCUMENTATION</span>
+            </div>
+            <p className="text-[12px] text-white/80 font-sans leading-relaxed whitespace-pre-wrap">
+              {content}
+            </p>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -132,6 +170,13 @@ export function Chatbot() {
   useEffect(() => {
     sessionStorage.setItem("mission-archive-chat", JSON.stringify(messages));
   }, [messages]);
+
+  useEffect(() => {
+    const handleOpenChatbot = () => setIsOpen(true);
+    window.addEventListener('open-chatbot', handleOpenChatbot);
+    return () => window.removeEventListener('open-chatbot', handleOpenChatbot);
+  }, []);
+
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -201,6 +246,8 @@ export function Chatbot() {
         role: "assistant",
         content: data.answer,
         sources: data.sources,
+        techWiki: data.tech_wiki,
+        suggestions: data.suggestions,
         timestamp: new Date(),
         isStreaming: true,
       };
@@ -289,10 +336,12 @@ export function Chatbot() {
               ref={scrollRef}
               className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 md:space-y-8 custom-scrollbar bg-black/40 shadow-[inset_0_0_30px_rgba(0,255,65,0.02)]"
             >
-              {messages.map((msg) => (
+              {messages.map((msg, index) => {
+                const isLast = index === messages.length - 1;
+                return (
                 <div
                   key={msg.id}
-                  className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                  className={`flex flex-col w-full ${msg.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div className="flex items-center gap-2.5 mb-2 opacity-50">
                     {msg.role === "assistant" ? <Bot size={11} className="text-mission-accent" /> : <User size={11} className="text-white" />}
@@ -325,11 +374,37 @@ export function Chatbot() {
                         <SourceCollapsible sources={msg.sources} />
                       </motion.div>
                     )}
+                    {msg.role === "assistant" && !msg.isStreaming && msg.techWiki && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                        <TechWikiCollapsible content={msg.techWiki} />
+                      </motion.div>
+                    )}
                   </div>
+                  
+                  {/* Suggested Prompts below the AI response */}
+                  {msg.role === "assistant" && !msg.isStreaming && isLast && !isLoading && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="mt-[20px] flex flex-col sm:flex-row flex-wrap gap-[12px] self-start w-full"
+                    >
+                      <div className="w-full text-[10px] text-[#00ff66]/50 font-mono uppercase tracking-widest mb-1">Suggested_Queries:</div>
+                      {(msg.suggestions && msg.suggestions.length > 0 ? msg.suggestions : shortcuts).map((shortcut) => (
+                        <button
+                          key={shortcut}
+                          onClick={() => handleSend(shortcut)}
+                          className="bg-black/80 border border-[#00ff66] text-[#00ff66] rounded-[20px] py-[8px] px-[16px] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_0_12px_#00ff66] font-mono text-[10px] md:text-[11px] uppercase tracking-widest text-left sm:text-center"
+                        >
+                          {shortcut}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
-              ))}
+              )})}
               {isLoading && (
-                <div className="flex flex-col items-start">
+                <div className="flex flex-col items-start w-full">
                   <div className="flex items-center gap-2 mb-1.5 opacity-50 text-mission-accent">
                     <Bot size={10} />
                     <span className="mono text-[8px] tracking-[0.2em] uppercase">AI_SYSTEM</span>
@@ -343,25 +418,6 @@ export function Chatbot() {
                 </div>
               )}
             </div>
-
-            {/* Shortcuts */}
-            {messages.length === 1 && !isLoading && (
-              <div className="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500 bg-black/40 shrink-0">
-                <div className="mono text-[8px] tracking-widest text-mission-accent/40">SUGGESTED_QUERIES:</div>
-                <div className="flex overflow-x-auto md:flex-wrap gap-2 pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-4 px-4 md:mx-0 md:px-0">
-                  {shortcuts.map((shortcut) => (
-                    <button
-                      key={shortcut}
-                      onClick={() => handleSend(shortcut)}
-                      className="whitespace-nowrap shrink-0 flex items-center gap-1.5 font-sans text-[11px] font-medium bg-mission-accent/5 border border-mission-accent/20 px-3 py-1.5 text-white/80 hover:bg-mission-accent hover:text-black transition-all hover:border-mission-accent group"
-                    >
-                      <span className="text-mission-accent group-hover:text-black transition-colors">{'>'}</span>
-                      {shortcut}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Input */}
             <div className="p-3 pb-[max(env(safe-area-inset-bottom),1rem)] md:p-4 border-t border-mission-accent/20 bg-mission-ink shrink-0">

@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from dotenv import load_dotenv
-from typing import List
+from typing import List, Optional
 from contextlib import asynccontextmanager
 
 from query import get_answer
@@ -43,6 +43,8 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     sources: List[str]
+    tech_wiki: Optional[str] = None
+    suggestions: Optional[List[str]] = None
 
 @app.get("/")
 def root():
@@ -61,7 +63,12 @@ def chat(request: ChatRequest):
     """
     try:
         result = get_answer(request.query)
-        return ChatResponse(answer=result["answer"], sources=result["sources"])
+        return ChatResponse(
+            answer=result["answer"], 
+            sources=result["sources"],
+            tech_wiki=result.get("tech_wiki"),
+            suggestions=result.get("suggestions")
+        )
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:

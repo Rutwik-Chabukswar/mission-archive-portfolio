@@ -1,5 +1,7 @@
 import os
 import re
+import glob
+from langchain_core.documents import Document
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -24,18 +26,25 @@ def clean_text(text: str) -> str:
 
 def ingest_documents():
     """
-    Ingests PDFs, cleans text, performs section-aware chunking,
+    Ingests PDFs and Markdown files, cleans text, performs section-aware chunking,
     and stores vector embeddings in ChromaDB using MiniLM.
     """
     print(f"Loading PDFs from {DATA_DIR}...")
     loader = PyPDFDirectoryLoader(DATA_DIR)
     documents = loader.load()
+    
+    print(f"Loading Markdown files from {DATA_DIR}...")
+    md_files = glob.glob(os.path.join(DATA_DIR, "*.md"))
+    for md_file in md_files:
+        with open(md_file, "r", encoding="utf-8") as f:
+            content = f.read()
+            documents.append(Document(page_content=content, metadata={"source": md_file}))
 
     if not documents:
         print("No documents found in the data directory.")
         return False
 
-    print(f"Loaded {len(documents)} document pages.")
+    print(f"Loaded {len(documents)} documents.")
 
     # Clean the text
     for doc in documents:

@@ -1,34 +1,52 @@
 import { motion } from "motion/react";
 import { Shield, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
-    { name: "About", href: "#about" },
-    { name: "Experience", href: "#experience" },
-    { name: "Projects", href: "#projects" },
-    { name: "Skills", href: "#skills" },
-    { name: "Contact", href: "#contact" },
+    { name: "About", path: "about" },
+    { name: "Experience", path: "experience" },
+    { name: "Projects", path: "projects" },
+    { name: "Skills", path: "skills" },
+    { name: "Contact", path: "contact" },
   ];
+
+  const handleNavClick = (path: string) => {
+    setIsOpen(false);
+    if (window.innerWidth < 768) {
+      const el = document.getElementById(path);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate(`/archive/${path}`);
+    }
+  };
+
+  const handleLogoClick = () => {
+    if (window.innerWidth < 768) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-mission-bg/95 border-b border-mission-accent">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex flex-col">
           <div className="text-[9px] opacity-60 tracking-[0.4em] mono mb-0.5">PERSONNEL_ARCHIVE // RC-77812</div>
-          <motion.a
-            href="#"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center gap-2 group"
+          <button
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 group cursor-pointer"
           >
             <Shield className="w-4 h-4 text-mission-accent group-hover:rotate-12 transition-transform" />
-            <span className="font-mono font-bold tracking-tighter text-lg uppercase leading-none">
+            <span className="font-mono font-bold tracking-tighter text-lg uppercase leading-none hover:text-white">
               RUTWIK CHABUKSWAR
             </span>
-          </motion.a>
+          </button>
         </div>
 
         {/* Desktop Nav */}
@@ -41,13 +59,13 @@ export function Navigation() {
             </div>
           </div>
           {navItems.map((item) => (
-            <a
+            <button
               key={item.name}
-              href={item.href}
-              className="mono text-[10px] hover:text-white border border-transparent hover:border-mission-accent/30 px-2 py-1 transition-all"
+              onClick={() => handleNavClick(item.path)}
+              className="mono text-[10px] hover:text-white border border-transparent hover:border-mission-accent/30 px-2 py-1 transition-all cursor-pointer"
             >
               {item.name}
-            </a>
+            </button>
           ))}
         </div>
 
@@ -68,14 +86,13 @@ export function Navigation() {
       >
         <div className="flex flex-col gap-2 p-4">
           {navItems.map((item) => (
-            <a
+            <button
               key={item.name}
-              href={item.href}
-              onClick={() => setIsOpen(false)}
-              className="mono py-2 border-b border-mission-border/30 last:border-0 hover:text-white"
+              onClick={() => handleNavClick(item.path)}
+              className="mono py-2 border-b border-mission-border/30 last:border-0 hover:text-white text-left cursor-pointer"
             >
               // {item.name}
-            </a>
+            </button>
           ))}
         </div>
       </motion.div>

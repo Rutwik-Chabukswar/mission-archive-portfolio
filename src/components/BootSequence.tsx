@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 
 const BOOT_STEPS = [
-  "Authenticating...",
-  "Scanning credentials...",
-  "Access granted...",
-  "Loading archive..."
+  "AUTHENTICATING USER...",
+  "VERIFYING CLEARANCE...",
+  "ACCESS GRANTED...",
+  "OPENING MISSION ARCHIVE..."
 ];
 
 export function BootSequence({ onComplete }: { onComplete: () => void }) {
