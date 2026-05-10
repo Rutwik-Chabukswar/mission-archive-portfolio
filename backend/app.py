@@ -28,10 +28,16 @@ app = FastAPI(
 )
 
 # Configure CORS
+origins = [
+    "https://mission-archive-portfolio.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with exact frontend domain
-    allow_credentials=False, # Must be False if allow_origins is "*" for strict iOS browsers
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
