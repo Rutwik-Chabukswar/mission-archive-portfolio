@@ -217,24 +217,44 @@ export function Chatbot() {
       const apiUrl = baseUrl.endsWith("/chat") ? baseUrl : `${baseUrl}/chat`;
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      // Increase timeout to 30 seconds to allow Render cold start
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       
       let response;
-      try {
-        response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: text }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-      } catch (e: any) {
-        clearTimeout(timeoutId);
-        console.error("Fetch request failed:", e);
-        if (e.name === 'AbortError') {
+      let fetchError;
+      
+      // Retry loop to handle premature iOS Safari connection drops during Render cold starts
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: text }),
+            signal: controller.signal
+          });
+          fetchError = null; // Success!
+          break; // Exit retry loop
+        } catch (e: any) {
+          fetchError = e;
+          if (e.name === 'AbortError') {
+            break; // Don't retry if we manually timed out after 30s
+          }
+          // If it's a network error (OFFLINE drop), wait 2s and retry
+          console.warn(`Fetch attempt ${attempt} failed, retrying...`, e);
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+      }
+      
+      clearTimeout(timeoutId);
+
+      if (fetchError) {
+        console.error("Fetch request finally failed:", fetchError);
+        if (fetchError.name === 'AbortError') {
           throw new Error("TIMEOUT");
         }
-        throw new Error(`OFFLINE: ${e.message}`);
+        throw new Error(`OFFLINE: ${fetchError.message}`);
       }
 
       if (!response.ok) {
@@ -419,7 +439,7 @@ export function Chatbot() {
                   <div className="p-4 border bg-mission-accent/5 border-mission-accent/20 text-mission-accent">
                     <div className="flex items-center gap-3">
                       <Loader2 size={14} className="animate-spin opacity-70" />
-                      <span className="mono text-[9px] tracking-widest">RETRIEVING_INTELLIGENCE...</span>
+                      <span className="mono text-[9px] tracking-widest uppercase">Waking intelligence servers...</span>
                     </div>
                   </div>
                 </div>
