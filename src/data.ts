@@ -61,13 +61,13 @@ export const EXPERIENCE = [
   {
     company: "Hanumatrix",
     role: "Software Engineering Intern",
-    period: "2024 - Present",
+    period: "17th Sept 2025 - 17th March 2026",
     desc: "Developing and optimizing core backend services for large-scale enterprise solutions. Implementing AI-driven features to enhance user productivity."
   },
   {
     company: "Quick Heal",
     role: "Cybersecurity Research Intern",
-    period: "Summer 2023",
+    period: "19th March 2026 - Present",
     desc: "Worked on threat analysis and system security protocols. Developed automated scripts for vulnerability assessment."
   }
 ];
