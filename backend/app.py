@@ -37,13 +37,14 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 class ChatRequest(BaseModel):
-    query: str
+    message: str
 
 class ChatResponse(BaseModel):
     answer: str
@@ -67,7 +68,7 @@ def chat(request: ChatRequest):
     Main chat endpoint. Queries the vector DB and returns an AI answer + source chunks.
     """
     try:
-        result = get_answer(request.query)
+        result = get_answer(request.message)
         return ChatResponse(
             answer=result["answer"], 
             sources=result["sources"],
