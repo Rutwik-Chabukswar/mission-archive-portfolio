@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from query import get_answer
 from ingest import ingest_documents
+from query import CHROMA_DB_DIR
 
 # Load environment variables
 load_dotenv()
@@ -15,6 +16,12 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Pre-loading HuggingFace embedding models and vectorstore...")
+    
+    # Auto-ingest if DB is missing (crucial for Render deployment)
+    if not os.path.exists(CHROMA_DB_DIR) or not os.listdir(CHROMA_DB_DIR):
+        print("chroma_db not found. Running automatic ingestion for deployment...")
+        ingest_documents()
+        
     from query import get_vectorstore
     get_vectorstore()
     print("Models pre-loaded successfully. System ready.")
