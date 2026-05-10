@@ -235,7 +235,7 @@ export function Chatbot() {
           response = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text }),
+            body: JSON.stringify({ message: text, query: text }),
             signal: controller.signal
           });
           fetchError = null; // Success!
