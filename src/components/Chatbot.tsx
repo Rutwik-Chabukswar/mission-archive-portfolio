@@ -182,6 +182,7 @@ export function Chatbot() {
   }, []);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const shortcuts = [
@@ -212,6 +213,7 @@ export function Chatbot() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+    setRetryCount(0);
 
     try {
       // Mobile iPhone Safari strictly blocks mixed content (HTTP over HTTPS).
@@ -246,6 +248,7 @@ export function Chatbot() {
           // If it's a network error (OFFLINE drop), wait 2s and retry
           console.warn(`Fetch attempt ${attempt} failed, retrying...`, e);
           if (attempt < 3) {
+            setRetryCount(attempt);
             await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
@@ -461,7 +464,9 @@ export function Chatbot() {
                   <div className="p-4 border bg-mission-accent/5 border-mission-accent/20 text-mission-accent">
                     <div className="flex items-center gap-3">
                       <Loader2 size={14} className="animate-spin opacity-70" />
-                      <span className="mono text-[9px] tracking-widest uppercase">Waking intelligence servers...</span>
+                      <span className="mono text-[9px] tracking-widest uppercase">
+                        {retryCount > 0 ? "Retrying secure connection..." : "Waking intelligence servers..."}
+                      </span>
                     </div>
                   </div>
                 </div>
