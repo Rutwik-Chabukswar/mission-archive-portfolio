@@ -145,17 +145,17 @@ export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = sessionStorage.getItem("mission-archive-chat");
-    if (saved) {
-      try {
+    try {
+      const saved = sessionStorage.getItem("mission-archive-chat");
+      if (saved) {
         const parsed = JSON.parse(saved);
         return parsed.map((m: any) => ({
           ...m,
           timestamp: new Date(m.timestamp)
         }));
-      } catch (e) {
-        console.error("Failed to parse chat history");
       }
+    } catch (e) {
+      console.warn("sessionStorage access blocked (likely iOS Safari Private Mode)");
     }
     return [
       {
@@ -168,7 +168,11 @@ export function Chatbot() {
   });
 
   useEffect(() => {
-    sessionStorage.setItem("mission-archive-chat", JSON.stringify(messages));
+    try {
+      sessionStorage.setItem("mission-archive-chat", JSON.stringify(messages));
+    } catch (e) {
+      // Ignore Safari private mode quota errors
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -354,7 +358,7 @@ export function Chatbot() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-0 left-0 right-0 z-[150] w-full h-[85vh] md:w-[480px] lg:w-[500px] md:h-[600px] md:bottom-24 md:right-6 md:left-auto md:max-h-[85vh] bg-mission-ink/95 backdrop-blur-xl border-t md:border border-mission-accent/30 flex flex-col shadow-[0_-10px_50px_rgba(0,0,0,0.8),md:0_10px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,255,65,0.1)] rounded-t-2xl md:rounded-sm overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-[150] w-full h-[85dvh] md:w-[480px] lg:w-[500px] md:h-[600px] md:bottom-24 md:right-6 md:left-auto md:max-h-[85dvh] bg-mission-ink/95 backdrop-blur-xl border-t md:border border-mission-accent/30 flex flex-col shadow-[0_-10px_50px_rgba(0,0,0,0.8),md:0_10px_50px_rgba(0,0,0,0.8),0_0_30px_rgba(0,255,65,0.1)] rounded-t-2xl md:rounded-sm overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 border-b border-mission-accent/20 bg-linear-to-r from-mission-accent/10 to-transparent flex items-center justify-between">
