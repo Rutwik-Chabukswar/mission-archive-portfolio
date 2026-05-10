@@ -47,7 +47,7 @@ class ChatRequest(BaseModel):
     message: str
 
 class ChatResponse(BaseModel):
-    answer: str
+    response: str
     sources: List[str]
     tech_wiki: Optional[str] = None
     suggestions: Optional[List[str]] = None
@@ -70,8 +70,8 @@ def chat(request: ChatRequest):
     try:
         result = get_answer(request.message)
         return ChatResponse(
-            answer=result["answer"], 
-            sources=result["sources"],
+            response=result.get("answer", result.get("response", "")), 
+            sources=result.get("sources", []),
             tech_wiki=result.get("tech_wiki"),
             suggestions=result.get("suggestions")
         )

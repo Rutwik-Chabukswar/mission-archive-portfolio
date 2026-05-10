@@ -276,14 +276,16 @@ export function Chatbot() {
 
       const data = await response.json();
       
-      if (!data || !data.answer || data.answer.trim() === "") {
+      const aiResponseText = data.response || data.message || data.answer || data.reply;
+      
+      if (!data || !aiResponseText || aiResponseText.trim() === "") {
         throw new Error("EMPTY_RESPONSE");
       }
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.answer,
+        content: aiResponseText,
         sources: data.sources,
         techWiki: data.tech_wiki,
         suggestions: data.suggestions,
