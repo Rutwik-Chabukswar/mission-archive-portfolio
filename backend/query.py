@@ -23,13 +23,13 @@ def get_vectorstore():
             
         print("Lazy-loading HuggingFace embeddings and Chroma DB to save memory...")
         # Lazy import heavy ML libraries ONLY when needed
-        from langchain_huggingface import HuggingFaceEmbeddings
+        from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
         from langchain_community.vectorstores import Chroma
         
-        # Initialize with CPU explicitly to save memory
-        _embeddings = HuggingFaceEmbeddings(
-            model_name="all-MiniLM-L6-v2",
-            model_kwargs={'device': 'cpu'},
+        # Initialize with FastEmbed (ONNX) explicitly to save memory (no PyTorch required)
+        _embeddings = FastEmbedEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            max_length=512
         )
         _vectorstore = Chroma(
             persist_directory=CHROMA_DB_DIR, 

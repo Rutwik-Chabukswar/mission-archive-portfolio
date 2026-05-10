@@ -4,7 +4,7 @@ import glob
 from langchain_core.documents import Document
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
 
@@ -63,7 +63,10 @@ def ingest_documents():
 
     # Initialize local embeddings (all-MiniLM-L6-v2)
     print("Generating embeddings and storing in ChromaDB...")
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = FastEmbedEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        max_length=512
+    )
     
     # Create or update Vector Store
     vectorstore = Chroma.from_documents(
