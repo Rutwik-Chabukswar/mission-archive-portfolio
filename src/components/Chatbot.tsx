@@ -258,6 +258,12 @@ export function Chatbot() {
       }
 
       if (!response.ok) {
+        if (response.status === 502 || response.status === 503 || response.status === 504) {
+          throw new Error("UNAVAILABLE");
+        }
+        if (response.status >= 500) {
+          throw new Error("SERVER_ERROR");
+        }
         throw new Error("API_ERROR");
       }
 
@@ -282,13 +288,25 @@ export function Chatbot() {
     } catch (error: any) {
       let fallbackContent = "Unable to retrieve intelligence.";
       
+      console.error("Chatbot API Failure Details:", error);
+      
       if (error.message === "TIMEOUT") {
         fallbackContent = "Archive connection timeout. Unable to retrieve intelligence in time.";
       } else if (error.message.startsWith("OFFLINE")) {
-        console.error("Network Error Details:", error.message);
-        fallbackContent = "Archive connection interrupted. The intelligence server appears to be offline.";
+        const details = error.message.toLowerCase();
+        if (details.includes("cors")) {
+          fallbackContent = "Archive access denied. Cross-Origin Request Blocked.";
+        } else if (details.includes("failed to fetch") || details.includes("network error")) {
+          fallbackContent = "Network connection issue. The intelligence server appears to be unreachable.";
+        } else {
+          fallbackContent = "Archive connection interrupted. Please verify your network stability.";
+        }
+      } else if (error.message === "UNAVAILABLE") {
+        fallbackContent = "Backend temporarily unavailable. The intelligence servers are rebooting.";
+      } else if (error.message === "SERVER_ERROR") {
+        fallbackContent = "Archive server error. Intelligence retrieval failed internally.";
       } else if (error.message === "API_ERROR") {
-        fallbackContent = "Archive connection interrupted. Data corruption detected during retrieval.";
+        fallbackContent = "Archive connection interrupted. Invalid response data detected.";
       } else if (error.message === "EMPTY_RESPONSE") {
         fallbackContent = "Archive accessed, but no relevant intelligence was found.";
       }
