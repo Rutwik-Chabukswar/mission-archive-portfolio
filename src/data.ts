@@ -15,7 +15,7 @@ export const DOSSIER = {
   role: "Software Engineer",
   specialization: "Full Stack Development & AI Systems",
   location: "Pune, India",
-  graduationYear: "2025",
+  graduationYear: "2026",
   availability: "Open to Opportunities",
   clearanceLevel: "TOP SECRET",
   fieldsOfOps: ["AI Agents", "Full Stack Apps", "System Architecture", "Cloud Infrastructure"],
